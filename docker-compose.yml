@@ -1,0 +1,18 @@
+version: '3.1'
+services:
+  db:
+    image: postgres
+    restart: always
+    container_name: blkexplorer-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: blkexplorer
+      POSTGRES_USER: admin
+  blockchain:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    command: '-b 1'
+    container_name: ganache

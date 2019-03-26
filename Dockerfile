@@ -8,4 +8,4 @@ ADD requirements.txt /codigo/
 RUN pip install -U pip
 RUN pip install -r requirements.txt
 RUN pip install ipython
-ADD ../../blockexplorer /codigo/
+ADD . /codigo/

@@ -1,0 +1,22 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="createsuperuser" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+    <deployment type="docker-image">
+      <settings>
+        <option name="command" value="python /opt/project/manage.py createsuperuser" />
+        <option name="containerName" value="createsuperuser" />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="blkexplorer:latest" />
+        <option name="commandLineOptions" value="--rm -it" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/opt/project" />
+              <option name="hostPath" value="C:\Users\Agustin\PycharmProjects\blockexplorer" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

@@ -20,11 +20,11 @@ from rest_framework import routers
 
 from restapi.views import AccountViewSet
 
-router = routers.DefaultRouter()
-router.register(r'accounts', AccountViewSet)
+routerv1 = routers.DefaultRouter()
+routerv1.register(r'accounts', AccountViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^', include(router.urls)),
+    url(r'^api/v1/', include(routerv1.urls)),
     url(r'^api-docs/', include('rest_framework.urls'))
 ]

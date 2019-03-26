@@ -5,7 +5,8 @@ from ethereum.models import Account, Transaction
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ('id', 'public_key',)
+        fields = ('id', 'public_key', 'balance_in_gwei')
+
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:

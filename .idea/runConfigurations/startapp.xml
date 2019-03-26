@@ -1,0 +1,22 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="startapp" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+    <deployment type="docker-image">
+      <settings>
+        <option name="command" value="python manage.py startapp dbupdater" />
+        <option name="containerName" value="startapp" />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="blkexplorer:latest" />
+        <option name="commandLineOptions" value="--rm -it --w /opt/project" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/opt/project" />
+              <option name="hostPath" value="C:\Users\Agustin\PycharmProjects\blockexplorer" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
