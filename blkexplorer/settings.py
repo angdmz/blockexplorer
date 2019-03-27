@@ -13,8 +13,9 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import sys
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -24,8 +25,7 @@ SECRET_KEY = '51f@ztn_*u8#_k_d6pdbq2j)m)hk-fw2&*-=y_1(ufiknkj+d$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -38,8 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'ethereum',
-    'restapi'
+    'restapi',
+    'synchro'
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,7 +73,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blkexplorer.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
@@ -85,7 +86,6 @@ DATABASES = {
         'PORT': '1234',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -105,7 +105,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -119,13 +118,74 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
 
+NODE_URL = ''
+
+IS_POA_CHAIN = False
+
+LOG_ROOT = BASE_DIR + '/logs/'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+}
+
 try:
     from blkexplorer.local_settings import *
 except:
     pass
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '%(levelname)s %(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s',
+        },
+        'history': {
+            'format': '%(asctime)s %(message)s'
+        }
+    },
+    'handlers': {
+        'stdout': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'history'
+        },
+        'info_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'info.log',
+            'formatter': 'history',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'error.log',
+            'formatter': 'detailed',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'logger': {
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'cmd-logger': {
+            'handlers': ['stdout', 'info_file', 'error_file', ],
+            'level': 'DEBUG',
+            'propagate': True
+        }
+    },
+}

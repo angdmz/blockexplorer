@@ -6,12 +6,14 @@ from synchro.managers import TransactionManager, BlockManager
 class Receipt(models.Model):
     cumulative_gas_used = models.IntegerField
 
+
 class Account(models.Model):
     public_key = models.CharField(max_length=42, null=True)
     balance_in_gwei = models.BigIntegerField(db_column='balance_in_gwei', default=0, null=True)
 
     class Meta:
         db_table = 'accounts'
+
 
 class Block(models.Model):
     timestamp = models.DateTimeField(null=True)
@@ -25,14 +27,21 @@ class Block(models.Model):
     receipt_root = models.CharField(null=True, max_length=50)
     transactions_root = models.CharField(null=True, max_length=50)
     total_difficulty = models.BigIntegerField(null=True)
-    size = models.IntegerField(null=True)
+    size = models.BigIntegerField(null=True)
+    nonce = models.IntegerField(null=True)
+    parent_hash = models.CharField(max_length=80, null=True)
+    miner = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
     objects = BlockManager()
+
+    def __str__(self):
+        return "Blk N° : {}".format(str(self.number))
 
     class Meta:
         db_table = 'blocks'
         verbose_name_plural = 'Blocks'
         verbose_name = 'Block'
-        unique_together = ('hash', 'number', )
+        unique_together = ('hash', 'number',)
+
 
 class Transaction(models.Model):
     hash = models.CharField(max_length=82, unique=True, null=True)
@@ -44,6 +53,9 @@ class Transaction(models.Model):
     value = models.BigIntegerField(null=True)
     objects = TransactionManager()
 
+    def __str__(self):
+        return "Hash: {} - gas: {}".format(str(self.hash), str(self.gas))
+
     class Meta:
         db_table = 'transactions'
         verbose_name = 'Transaction'
@@ -51,7 +63,7 @@ class Transaction(models.Model):
 
 
 class TransactionRelationship(models.Model):
-    from_account = models.ForeignKey(Account,on_delete=models.CASCADE, related_name='from_account', null=True)
+    from_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='from_account', null=True)
     to_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='to_account', null=True)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
     block = models.ForeignKey(Block, on_delete=models.CASCADE, null=True)

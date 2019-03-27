@@ -18,10 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from restapi.views import AccountViewSet
+from restapi.views import AccountViewSet, BlockViewSet
 
 routerv1 = routers.DefaultRouter()
 routerv1.register(r'accounts', AccountViewSet)
+routerv1.register(r'blocks', BlockViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

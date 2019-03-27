@@ -4,7 +4,6 @@ from synchro.services import FullBlockChainLoad
 
 
 class Command(BaseCommand):
-
     loader = FullBlockChainLoad()
 
     def handle(self, *args, **options):

@@ -1,12 +1,18 @@
 from web3 import Web3
 
+from blkexplorer import settings
+
+
 class HTTPProviderGenerator:
-    url = ''
+    url = settings.NODE_URL
+
     def generate_provider(self):
         return Web3(Web3.HTTPProvider(self.url))
 
+
 class Gateway:
     w3: Web3
+
     def __init__(self, provider_generator, is_geth_poa_network=False):
         self.w3 = provider_generator.generate_provider()
         if is_geth_poa_network:
@@ -46,4 +52,4 @@ class Gateway:
         return self.w3.eth.getTransaction(tx_hash)
 
     def get_last_blocknumber(self):
-        return self.w3.eth.blocknumber
+        return self.w3.eth.blockNumber
