@@ -260,3 +260,5 @@ fabric.properties
 .venv/
 
 # End of https://www.gitignore.io/api/django,python,pycharm
+
+logs/
