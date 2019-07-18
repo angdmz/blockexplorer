@@ -37,9 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'gateway',
     'ethereum',
-    'restapi'
+    'restapi',
+    'constance',
+    'constance.backends.database',
 ]
+
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -124,6 +129,30 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+CONSTANCE_CONFIG = {
+    'DAPP_NODE_URL': ('http://172.17.0.1:8545', 'Node URL ', str),
+    'DAPP_IS_POA': (False, 'Is Proof of Authority', bool)
+}
+
+class LazySetting:
+    def __init__(self, func):
+        self.func = func
+    @property
+    def x(self):
+        try:
+            return self.value
+        except AttributeError:
+            self.value = self.func()
+            return self.value
+
+def contance_setting(setting):
+    from constance import config
+    def returner():
+        return config[setting]
+    return returner
+
+DAPP_NODE_URL = LazySetting(contance_setting('DAPP_NODE_URL'))
 
 try:
     from blkexplorer.local_settings import *
