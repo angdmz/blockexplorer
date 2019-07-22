@@ -2,19 +2,21 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import viewsets
-from rest_framework.pagination import LimitOffsetPagination
 
-from ethereum.models import Account, TransactionRelationship
-from restapi.serializers import AccountSerializer
+from ethereum.models import Account, TransactionRelationship, Block
+from restapi.serializers import AccountSerializer, BlockSerializer
 
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):
-    pagination_class = LimitOffsetPagination
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
 
 class AccountTransactionViewSet(viewsets.ReadOnlyModelViewSet):
-    pagination_class = LimitOffsetPagination
-    queryset = TransactionRelationship.objects.all().distinct('from_account')
+    queryset = TransactionRelationship.objects.all()
     serializer_class = AccountSerializer
+
+
+class BlockViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Block.objects.all()
+    serializer_class = BlockSerializer

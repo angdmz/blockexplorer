@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import sys
+
+from blkexplorer.utils import LazyDict, constance_setting
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -24,8 +28,7 @@ SECRET_KEY = '51f@ztn_*u8#_k_d6pdbq2j)m)hk-fw2&*-=y_1(ufiknkj+d$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -39,9 +42,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'gateway',
     'ethereum',
-    'restapi',
     'constance',
     'constance.backends.database',
+    'restapi',
+    'synchro'
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
@@ -131,30 +135,81 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CONSTANCE_CONFIG = {
-    'DAPP_NODE_URL': ('http://172.17.0.1:8545', 'Node URL ', str),
-    'DAPP_IS_POA': (False, 'Is Proof of Authority', bool)
+    'NODE_URL': ('http://172.17.0.1:8545', 'Node URL ', str),
+    'IS_POA': (False, 'Is Proof of Authority', bool)
 }
 
-class LazySetting:
-    def __init__(self, func):
-        self.func = func
-    @property
-    def x(self):
-        try:
-            return self.value
-        except AttributeError:
-            self.value = self.func()
-            return self.value
 
-def contance_setting(setting):
-    from constance import config
-    def returner():
-        return config[setting]
-    return returner
+DAPP_SETTINGS = LazyDict({
+    'NODE_URL': (constance_setting, 'NODE_URL'),
+    'IS_POA': (constance_setting, 'IS_POA'),
+})
 
-DAPP_NODE_URL = LazySetting(contance_setting('DAPP_NODE_URL'))
+LOGGING = {}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'Node info': ('NODE_URL', 'IS_POA', ),
+}
+
+LOG_ROOT = BASE_DIR + '/logs/'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+}
 
 try:
     from blkexplorer.local_settings import *
 except:
     pass
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '%(levelname)s %(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s',
+        },
+        'history': {
+            'format': '%(asctime)s %(message)s'
+        }
+    },
+    'handlers': {
+        'stdout': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'history'
+        },
+        'info_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'info.log',
+            'formatter': 'history',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'error.log',
+            'formatter': 'detailed',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'logger': {
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'cmd-logger': {
+            'handlers': ['stdout', 'info_file', 'error_file', ],
+            'level': 'DEBUG',
+            'propagate': True
+        }
+    },
+}

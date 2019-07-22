@@ -1,9 +1,10 @@
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 
-NODE_URL = getattr(settings, 'DAPP_NODE_URL', None)
-IS_POA = getattr(settings, 'DAPP_IS_POA', False)
+SETTINGS = getattr(settings, 'DAPP_SETTINGS',
+                   {
+                       'NODE_URL': 'http://localhost:8545',
+                       'IS_POA': False,
+                   })
 
-if NODE_URL is None:
-    raise ImproperlyConfigured('NODE_URL is not set')
-
+NODE_URL = SETTINGS['NODE_URL']
+IS_POA = SETTINGS['IS_POA']
