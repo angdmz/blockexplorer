@@ -1,7 +1,7 @@
 from django.db import transaction
 from dapp import settings
 from gateway.gateway import generate_http_gateway
-from ethereum.models import Transaction, Block, Account, TransactionRelationship
+from ethereum.models import Transaction, Block, Account, TransactionRelationship, Receipt
 
 import logging
 
@@ -35,15 +35,17 @@ class TransactionSynchro:
 
 
 class ReceiptSynchro:
-    rpt_manager = Block.objects
+    rpt_manager = Receipt.objects
 
     def sync_receipt(self, rpt):
-        logger.info("Syncing rpt: {}".format(rpt['hash'].hex()))
+        logger.info("Syncing rpt: {}".format(rpt['transactionHash'].hex()))
         rpt_manager, created = self.rpt_manager.update_or_create(
-            hash=rpt['hash'].hex(),
+            transaction_hash=rpt['transactionHash'].hex(),
             defaults=
             {
-                'cumulative_gas_used': rpt['gasUsed'],
+                'cumulative_gas_used': rpt['cumulativeGasUsed'],
+                'gas_used': rpt['gasUsed'],
+                'status': rpt['status'],
             }
         )
         return rpt_manager, created
@@ -53,8 +55,10 @@ class AccountSynchro:
     acc_manager = Account.objects
 
     def sync_account(self, address):
-        acc_model, created = self.acc_manager.update_or_create(public_key=address)
-        return acc_model, created
+        if address is not None:
+            acc_model, created = self.acc_manager.update_or_create(address=address)
+            return acc_model, created
+        return None, False
 
 
 class BlockSynchro:
@@ -139,3 +143,14 @@ class FullBlockChainLoad:
     def load(self):
         logger.info("Starting blockchain full load")
         self.block_process.process(0, self.gateway.get_last_blocknumber())
+
+
+class LastBlocksLoad:
+    gateway = create_gateway()
+    block_process = BlockProcessFromTo()
+    block_manager = Block.objects
+
+    def load(self):
+        last_loaded_block = self.block_manager.last_block()
+        logger.info("Loading from block {}".format(str(last_loaded_block)))
+        self.block_process.process(last_loaded_block.number, self.gateway.get_last_blocknumber())

@@ -5,7 +5,7 @@ services:
     restart: always
     container_name: blkexplorer-postgres
     ports:
-      - "5432:5432"
+      - "5435:5432"
     environment:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: blkexplorer
@@ -13,6 +13,6 @@ services:
   blockchain:
     image: trufflesuite/ganache-cli:latest
     ports:
-      - "8545:8545"
+      - "8550:8545"
     command: '-b 1'
-    container_name: ganache
+    container_name: blkexplorer-ganache

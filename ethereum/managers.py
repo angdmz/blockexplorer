@@ -31,3 +31,6 @@ class BlockManager(models.Manager):
         except Exception as e:
             raise BlockNonExistent(e)
         return res
+
+    def last_block(self):
+        return self.latest('number')

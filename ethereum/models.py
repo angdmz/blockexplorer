@@ -4,7 +4,13 @@ from ethereum.managers import TransactionManager, BlockManager
 
 
 class Receipt(models.Model):
-    cumulative_gas_used = models.IntegerField
+    cumulative_gas_used = models.IntegerField(null=True)
+    gas_used = models.IntegerField(null=True)
+    status = models.IntegerField(null=True)
+    transaction_hash = models.CharField(max_length=82, unique=True, null=True)
+
+    def __str__(self):
+        return "Hash: {} - gas: {}".format(str(self.transaction_hash), str(self.gas_used))
 
 
 class Account(models.Model):
