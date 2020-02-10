@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ethereum.models import Account, Transaction, Block, TransactionRelationship
+from ethereum.models import Account, Block, TransactionRelationship
 
 
 class BlockSerializer(serializers.ModelSerializer):
@@ -18,35 +18,61 @@ class AccountSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     hash = serializers.SerializerMethodField()
     block_number = serializers.SerializerMethodField()
-    receipt = serializers.SerializerMethodField()
+    gas = serializers.SerializerMethodField()
+    gas_price = serializers.SerializerMethodField()
+    input = serializers.SerializerMethodField()
     from_account = serializers.SerializerMethodField()
     to_account = serializers.SerializerMethodField()
+    cumulative_gas_used = serializers.SerializerMethodField()
+    gas_used = serializers.SerializerMethodField()
+    nonce = serializers.SerializerMethodField()
+    value = serializers.SerializerMethodField()
 
     def get_hash(self, obj):
-        tx = obj.get_transaction()
-        codigo = tx.hash
-        return codigo
+        tx_hash = obj.transaction.hash if obj.transaction is not None else None
+        return tx_hash
 
-    def get_asignacion_nombre(self, obj):
-        asignacion = obj.get_asignacion()
-        descripcion = asignacion.cod_estructura_desempenio.descripcion if asignacion is not None else None
-        return descripcion
+    def get_block_number(self, obj):
+        block_number = obj.block.number if obj.block is not None else None
+        return block_number
 
-    def get_en_proceso_baja(self, obj):
-        en_proceso_baja = obj.get_en_proceso_baja()
-        return en_proceso_baja
+    def get_gas(self, obj):
+        gas = obj.transaction.gas if obj.transaction is not None else None
+        return gas
 
-    def get_cod_convenio(self, obj):
-        asignacion = obj.get_asignacion()
-        cod_convenio = asignacion.cod_convenio.cod_convenio if asignacion is not None else None
-        return cod_convenio
+    def get_gas_price(self, obj):
+        gas_price = obj.transaction.gas_price if obj.transaction is not None else None
+        return gas_price
 
-    def get_convenio_descripcion(self, obj):
-        asignacion = obj.get_asignacion()
-        descripcion = asignacion.cod_convenio.descripcion if asignacion is not None else None
-        return descripcion
+    def get_input(self, obj):
+        tx_input = obj.transaction.input if obj.transaction is not None else None
+        return tx_input
+
+    def get_from_account(self, obj):
+        from_account = obj.transaction.from_account if obj.transaction is not None else None
+        return from_account
+
+    def get_to_account(self, obj):
+        to_account = obj.transaction.to_account if obj.transaction is not None else None
+        return to_account
+
+    def get_cumulative_gas_used(self, obj):
+        cumulative_gas_used = obj.receipt.cumulative_gas_used if obj.receipt is not None else None
+        return cumulative_gas_used
+
+    def get_gas_used(self, obj):
+        gas_used = obj.receipt.gas_used if obj.receipt is not None else None
+        return gas_used
+
+    def get_nonce(self, obj):
+        nonce = obj.transaction.nonce if obj.transaction is not None else None
+        return nonce
+
+    def get_value(self, obj):
+        value = obj.transaction.value if obj.transaction is not None else None
+        return value
 
     class Meta:
         model = TransactionRelationship
-        fields = ('transaction__hash', 'transaction__gas', 'transaction__gas_price', 'transaction__input',
-                  'transaction__transaction_index', 'transaction__nonce', 'transaction__value')
+        fields = ('hash', 'gas', 'gas_price', 'input',
+                  'from_account', 'to_account', 'cumulative_gas_used', 'gas_used', 'nonce', 'value', 'block_number', )

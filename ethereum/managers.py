@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 
@@ -33,4 +34,8 @@ class BlockManager(models.Manager):
         return res
 
     def last_block(self):
-        return self.latest('number')
+        try:
+            latest_number = self.latest('number')
+        except ObjectDoesNotExist as e:
+            latest_number = 0
+        return latest_number
