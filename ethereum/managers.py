@@ -33,9 +33,9 @@ class BlockManager(models.Manager):
             raise BlockNonExistent(e)
         return res
 
-    def last_block(self):
+    def last_block_number(self):
         try:
-            latest_number = self.latest('number')
+            latest_number = self.latest('number').number
         except ObjectDoesNotExist as e:
             latest_number = 0
         return latest_number

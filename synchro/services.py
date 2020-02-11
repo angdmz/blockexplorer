@@ -56,7 +56,7 @@ class AccountSynchro:
 
     def sync_account(self, address):
         if address is not None:
-            acc_model, created = self.acc_manager.update_or_create(address=address)
+            acc_model, created = self.acc_manager.update_or_create(public_key=address)
             return acc_model, created
         return None, False
 
@@ -151,6 +151,6 @@ class LastBlocksLoad:
     block_manager = Block.objects
 
     def load(self):
-        last_loaded_block = self.block_manager.last_block()
+        last_loaded_block = self.block_manager.last_block_number()
         logger.info("Loading from block {}".format(str(last_loaded_block)))
-        self.block_process.process(last_loaded_block.number, self.gateway.get_last_blocknumber())
+        self.block_process.process(last_loaded_block, self.gateway.get_last_blocknumber())
