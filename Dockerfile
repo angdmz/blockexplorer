@@ -7,12 +7,12 @@ RUN apk --update add \
 RUN apk add --no-cache \
     git \
     libffi-dev
-RUN mkdir -p /opt/project
+RUN mkdir -p /opt/project/staticfiles
 WORKDIR /opt/project
 COPY requirements.txt /opt/project
 RUN pip install -U pip
 RUN pip install -r requirements.txt
-RUN pip install ipython
-RUN pip install coverage
-RUN pip install django-discover-runner
+RUN pip install gunicorn
 ADD . /opt/project
+ENV HOME=/opt/project
+ENV APP_HOME=/opt/project

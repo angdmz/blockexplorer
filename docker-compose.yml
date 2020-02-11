@@ -1,18 +1,45 @@
 version: '3.1'
 services:
   db:
-    image: postgres
+    image: postgres:12.0-alpine
     restart: always
     container_name: blkexplorer-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+  migrations:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - db
+    image: blkexplorer:prod
+    container_name: blkexplorer-migrations
+    command: python manage.py migrate --noinput
+  nginx:
+    build: ./nginx
+    container_name: nginx-blkexplorer
+    volumes:
+      - static_volume:/home/app/web/staticfiles
     ports:
-      - "5435:5432"
-    environment:
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: blkexplorer
-      POSTGRES_USER: admin
-  blockchain:
-    image: trufflesuite/ganache-cli:latest
-    ports:
-      - "8550:8545"
-    command: '-b 1'
-    container_name: blkexplorer-ganache
+      - 1337:80
+    depends_on:
+      - web
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: gunicorn blkexplorer.wsgi:application --bind 0.0.0.0:8000
+    container_name: gunicorn-blkexplorer
+    expose:
+      - 8000
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - migrations
+
+volumes:
+  postgres_data:
+  static_volume:
