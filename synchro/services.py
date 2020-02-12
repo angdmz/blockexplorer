@@ -1,5 +1,5 @@
 from django.db import transaction
-from dapp import settings
+from django.conf import settings
 from gateway.gateway import generate_http_gateway
 from ethereum.models import Transaction, Block, Account, TransactionRelationship, Receipt
 

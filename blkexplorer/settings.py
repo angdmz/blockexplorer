@@ -28,6 +28,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
+DEBUG = os.getenv('DEBUG', 0)
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -42,13 +44,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'gateway',
     'ethereum',
-    'constance',
-    'constance.backends.database',
     'restapi',
     'synchro'
 ]
 
-CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -132,37 +131,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/staticfiles/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-CONSTANCE_CONFIG = {
-    'NODE_URL': ('http://172.17.0.1:8545', 'Node URL ', str),
-    'IS_POA': (False, 'Is Proof of Authority', bool)
-}
+NODE_URL = os.getenv('NODE_URL','http://localhost:8545')
+IS_POA = True if os.getenv('IS_POA', 0) == 1 else False
 
-
-DAPP_SETTINGS = LazyDict({
-    'NODE_URL': (constance_setting, 'NODE_URL'),
-    'IS_POA': (constance_setting, 'IS_POA'),
-})
-
-LOGGING = {}
-
-CONSTANCE_CONFIG_FIELDSETS = {
-    'Node info': ('NODE_URL', 'IS_POA', ),
-}
-
-LOG_ROOT = BASE_DIR + '/logs/'
-
-
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100,
-}
-
-try:
-    from blkexplorer.local_settings import *
-except:
-    pass
+LOG_ROOT = os.getenv('LOG_ROOT', BASE_DIR + '/logs/')
 
 LOGGING = {
     'version': 1,
@@ -213,3 +188,17 @@ LOGGING = {
         }
     },
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+}
+
+
+FIXTURE_DIRS = ['blkexplorer/fixtures/']
+
+try:
+    from blkexplorer.local_settings import *
+except:
+    pass
+

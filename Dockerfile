@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     libffi-dev
 RUN mkdir -p /opt/project/staticfiles
 WORKDIR /opt/project
-COPY requirements.txt /opt/project
+COPY . /opt/project
 RUN pip install -U pip
 RUN pip install -r requirements.txt
 RUN pip install gunicorn

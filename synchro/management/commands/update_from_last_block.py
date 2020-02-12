@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 
-from synchro.services import FullBlockChainLoad, BlockProcess, LastBlocksLoad
+from synchro.services import LastBlocksLoad
 
 
 class Command(BaseCommand):
