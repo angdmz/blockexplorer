@@ -155,34 +155,22 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
-            'formatter': 'history'
+            'formatter': 'detailed'
         },
-        'info_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': LOG_ROOT + 'info.log',
-            'formatter': 'history',
-        },
-        'error_file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': LOG_ROOT + 'error.log',
-            'formatter': 'detailed',
-        }
     },
     'loggers': {
         'django': {
-            'handlers': ['error_file', 'info_file', ],
-            'level': 'WARNING',
+            'handlers': ['stdout', ],
+            'level': 'INFO',
             'propagate': True,
         },
         'logger': {
-            'handlers': ['error_file', 'info_file', ],
-            'level': 'DEBUG',
+            'handlers': ['stdout', ],
+            'level': 'INFO',
             'propagate': True,
         },
         'cmd-logger': {
-            'handlers': ['stdout', 'info_file', 'error_file', ],
+            'handlers': ['stdout', ],
             'level': 'DEBUG',
             'propagate': True
         }
