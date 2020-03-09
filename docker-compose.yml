@@ -4,8 +4,10 @@ services:
     image: postgres
     restart: always
     container_name: blkexplorer-postgres
+    expose:
+      - 5432
     ports:
-      - "5435:5432"
+      - ${DB_PORT}:5432
     environment:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: blkexplorer
@@ -13,6 +15,47 @@ services:
   blockchain:
     image: trufflesuite/ganache-cli:latest
     ports:
-      - "8550:8545"
+      - ${RPC_PORT}:8545
     command: '-b 1'
     container_name: blkexplorer-ganache
+  blkexplorer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: blkexplorer:dev
+    container_name: blkexplorer-app
+    volumes:
+    - .:/opt/project
+    ports:
+    - ${APP_PORT}:8000
+    command: python manage.py runserver 0.0.0.0:8000
+  makemigrations:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - db
+    volumes:
+    - .:/opt/project
+    image: blkexplorer:dev
+    container_name: blkexplorer-makemigrations
+    command: python manage.py makemigrations --noinput
+  migrations:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - makemigrations
+    image: blkexplorer:dev
+    container_name: blkexplorer-migrations
+    command: python manage.py migrate --noinput
+    volumes:
+    - .:/opt/project
+  superuser:
+    depends_on:
+      - migrations
+    image: blkexplorer:dev
+    container_name: blkexplorer-superuser
+    command: python manage.py loaddata superuser
+    volumes:
+    - .:/opt/project
