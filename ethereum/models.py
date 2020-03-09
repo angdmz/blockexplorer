@@ -87,3 +87,15 @@ class TransactionRelationship(models.Model):
         unique_together = ('from_account', 'to_account', 'transaction')
         verbose_name = 'TX - Account relation'
         verbose_name_plural = 'TX - Account relations'
+
+
+class SmartContract(Account):
+    deployer = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True, default=None)
+
+    def __str__(self):
+        return "{account} {deployer}".format(account=str(super()), deployer=self.deployer)
+
+    class Meta:
+        db_table = 'smart_contracts'
+        verbose_name = 'Smart Contract'
+        verbose_name_plural = 'Smart Contracts'
