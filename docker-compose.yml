@@ -7,7 +7,7 @@ services:
     expose:
       - 5432
     ports:
-      - ${DB_PORT}:5432
+      - ${DB_PORT:-5432}:5432
     environment:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: blkexplorer
@@ -15,7 +15,7 @@ services:
   blockchain:
     image: trufflesuite/ganache-cli:latest
     ports:
-      - ${RPC_PORT}:8545
+      - ${RPC_PORT:-8545}:8545
     command: '-b 1'
     container_name: blkexplorer-ganache
   blkexplorer:
@@ -27,7 +27,7 @@ services:
     volumes:
     - .:/opt/project
     ports:
-    - ${APP_PORT}:8000
+    - ${API_PORT:-8000}:8000
     command: python manage.py runserver 0.0.0.0:8000
   makemigrations:
     build:
@@ -59,3 +59,9 @@ services:
     command: python manage.py loaddata superuser
     volumes:
     - .:/opt/project
+  update_from_last_block:
+    image: blkexplorer:dev
+    container_name: blkexplorer-update_from_last_block
+    command: python manage.py update_from_last_block
+    volumes:
+      - .:/opt/project

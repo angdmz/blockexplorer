@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 from ethereum.managers import TransactionManager, BlockManager
@@ -18,7 +21,7 @@ class Account(models.Model):
     balance_in_wei = models.CharField(max_length=50, db_column='balance_in_wei', default='0', null=True)
 
     def __str__(self):
-        return self.public_key
+        return str(self.public_key)
 
     class Meta:
         db_table = 'accounts'
@@ -44,13 +47,13 @@ class Block(models.Model):
     objects = BlockManager()
 
     def __str__(self):
-        return "Blk N° : {}".format(str(self.number))
+        return "Blk N° : {number}".format(number=str(self.number), dt=datetime.fromtimestamp(self.timestamp))
 
     class Meta:
         db_table = 'blocks'
         verbose_name_plural = 'Blocks'
         verbose_name = 'Block'
-        unique_together = ('hash', 'number', )
+        unique_together = ('hash', 'number',)
 
 
 class Transaction(models.Model):
@@ -80,7 +83,8 @@ class TransactionRelationship(models.Model):
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return 'Tx : {}; from : {}; to : {}; block : {}; receipt : {}'
+        return 'Tx : {tx}; from : {from_account}; to : {to_account};{block};' \
+            .format(tx=self.transaction, from_account=self.from_account, to_account=self.to_account, block=self.block)
 
     class Meta:
         db_table = 'transaction_relationships'
@@ -88,14 +92,74 @@ class TransactionRelationship(models.Model):
         verbose_name = 'TX - Account relation'
         verbose_name_plural = 'TX - Account relations'
 
+    @property
+    def hash(self):
+        return self.transaction.hash
 
-class SmartContract(Account):
-    deployer = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True, default=None)
+    @property
+    def block_date(self):
+        return datetime.fromtimestamp(self.block.timestamp)
+
+    @property
+    def gas(self):
+        return self.transaction.gas
+
+    @property
+    def gas_price(self):
+        return self.transaction.gas_price
+
+    @property
+    def block_number(self):
+        return self.block.number
+
+    @property
+    def block_miner(self):
+        return self.block.miner
+
+    @property
+    def nonce(self):
+        return self.transaction.nonce
+
+
+class ABI(models.Model):
+    json = JSONField(unique=True)
+    label = models.CharField(max_length=100, null=True, blank=True, default=None)
 
     def __str__(self):
-        return "{account} {deployer}".format(account=str(super()), deployer=self.deployer)
+        return str(self.label)
+
+    class Meta:
+        db_table = 'abis'
+        verbose_name = 'ABI'
+        verbose_name_plural = 'ABIs'
+
+
+class SmartContract(Account):
+    deployer = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True, default=None,
+                                 related_name="smart_contracts")
+    abi = models.ForeignKey(ABI, on_delete=models.CASCADE, null=True, blank=True, default=None)
+    deploy_tx = models.ForeignKey(TransactionRelationship, on_delete=models.CASCADE, null=True, blank=True,
+                                  default=None)
+
+    @property
+    def abi_text(self):
+        return self.abi.json
+
+    def __str__(self):
+        return "{account} deployed by: {deployer}".format(account=str(self.public_key), deployer=self.deployer)
 
     class Meta:
         db_table = 'smart_contracts'
         verbose_name = 'Smart Contract'
         verbose_name_plural = 'Smart Contracts'
+
+
+class Log(models.Model):
+    tx_rel = models.ForeignKey(TransactionRelationship, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    smart_contract = models.ForeignKey(SmartContract, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    content = models.TextField(null=True)
+
+    class Meta:
+        db_table = 'event_logs'
+        verbose_name_plural = 'Logs'
+        verbose_name = 'Log'

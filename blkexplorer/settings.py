@@ -40,12 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_json_widget',
     'gateway',
     'ethereum',
     'constance',
     'constance.backends.database',
     'restapi',
-    'synchro'
+    'synchro',
 ]
 
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
