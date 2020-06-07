@@ -16,21 +16,22 @@ import os
 import sys
 
 from blkexplorer.utils import LazyDict, constance_setting
+import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
-DEBUG = os.getenv('DEBUG', 0)
+DEBUG = int(os.getenv('DEBUG', 0)) == 1
 
 ALLOWED_HOSTS = ['*']
+
+FIXTURE_DIRS = ['blkexplorer/fixtures/']
 
 # Application definition
 
@@ -42,12 +43,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg',
+    'django_json_widget',
     'gateway',
     'ethereum',
     'restapi',
-    'synchro'
+    'synchro',
 ]
 
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -79,21 +83,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blkexplorer.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": 'django.db.backends.postgresql',
-        "NAME": os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv('DB_NAME', 'blkexplorer'),
+        'USER': os.getenv('DB_USER', 'admin'),
+        'PASSWORD': os.getenv('DB_PASS', 'admin'),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -113,7 +115,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -127,17 +128,17 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = "/staticfiles/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_URL = '/static/'
 
-NODE_URL = os.getenv('NODE_URL','http://localhost:8545')
-IS_POA = True if os.getenv('IS_POA', 0) == 1 else False
+LOG_ROOT = os.getenv("LOG_ROOT", BASE_DIR + '/logs/')
 
-LOG_ROOT = os.getenv('LOG_ROOT', BASE_DIR + '/logs/')
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+}
 
 LOGGING = {
     'version': 1,
@@ -155,38 +156,41 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
-            'formatter': 'detailed'
+            'formatter': 'history'
         },
+        'info_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'info.log',
+            'formatter': 'history',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': LOG_ROOT + 'error.log',
+            'formatter': 'detailed',
+        }
     },
     'loggers': {
         'django': {
-            'handlers': ['stdout', ],
-            'level': 'INFO',
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'WARNING',
             'propagate': True,
         },
         'logger': {
-            'handlers': ['stdout', ],
-            'level': 'INFO',
+            'handlers': ['error_file', 'info_file', ],
+            'level': 'DEBUG',
             'propagate': True,
         },
         'cmd-logger': {
-            'handlers': ['stdout', ],
+            'handlers': ['stdout', 'info_file', 'error_file', ],
             'level': 'DEBUG',
             'propagate': True
         }
     },
 }
 
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100,
-}
-
-
-FIXTURE_DIRS = ['blkexplorer/fixtures/']
-
 try:
     from blkexplorer.local_settings import *
 except:
     pass
-

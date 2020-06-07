@@ -1,13 +1,14 @@
 from django.db import transaction
 from django.conf import settings
 from gateway.gateway import generate_http_gateway
-from ethereum.models import Transaction, Block, Account, TransactionRelationship, Receipt
+from ethereum.models import Transaction, Block, Account, TransactionRelationship, Receipt, SmartContract
 
 import logging
 
 from gateway.utils import HexBytesToDict
 
 logger = logging.getLogger('cmd-logger')
+
 
 def create_gateway():
     return generate_http_gateway(settings.NODE_URL, settings.IS_POA)
@@ -61,6 +62,21 @@ class AccountSynchro:
         return None, False
 
 
+class SmartContractSynchro:
+    smart_contract_manager = SmartContract.objects
+
+    def sync_smart_contract(self, receipt, tx_rel):
+        if receipt['contractAddress'] is not None:
+            sc_model, created = self.smart_contract_manager.update_or_create(public_key=receipt['contractAddress'],
+                                                                             defaults={
+                                                                                 'deployer': tx_rel.from_account,
+                                                                                 'deploy_tx': tx_rel
+                                                                             }
+                                                                             )
+            return sc_model, created
+        return None, False
+
+
 class BlockSynchro:
     blk_manager = Block.objects
     acc_sync = AccountSynchro()
@@ -107,6 +123,7 @@ class BlockProcess:
     tx_synchro = TransactionSynchro()
     acc_synchro = AccountSynchro()
     txrel_synchro = TransactionRelationSynchro()
+    smart_contract_synchro = SmartContractSynchro()
     hex_to_dict = HexBytesToDict()
 
     def process(self, block_number):
@@ -121,8 +138,10 @@ class BlockProcess:
                 tx_obj, created = self.tx_synchro.sync_tx(full_tx)
                 from_account, created = self.acc_synchro.sync_account(full_tx['from'])
                 to_account, created = self.acc_synchro.sync_account(full_tx['to'])
-                self.txrel_synchro.syn_txrel(tx_obj, from_account=from_account,
-                                             to_account=to_account, block=block_obj, receipt=receipt_obj)
+                txrel, created = self.txrel_synchro.syn_txrel(tx_obj, from_account=from_account,
+                                                              to_account=to_account, block=block_obj,
+                                                              receipt=receipt_obj)
+                self.smart_contract_synchro.sync_smart_contract(receipt, txrel)
 
 
 class BlockProcessFromTo:
