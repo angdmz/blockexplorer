@@ -29,6 +29,8 @@ services:
     ports:
     - ${API_PORT:-8000}:8000
     command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DEBUG: ${DEBUG:-1}
   makemigrations:
     build:
       dockerfile: Dockerfile

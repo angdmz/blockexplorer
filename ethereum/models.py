@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 from ethereum.managers import TransactionManager, BlockManager
-
+from unixtimestampfield import fields
 
 class Receipt(models.Model):
     cumulative_gas_used = models.IntegerField(null=True)
@@ -28,7 +28,7 @@ class Account(models.Model):
 
 
 class Block(models.Model):
-    timestamp = models.BigIntegerField(null=True)
+    timestamp = fields.UnixTimeStampField(null=True)
     number = models.IntegerField(null=True, db_index=True)
     hash = models.CharField(max_length=66, null=True)
     mix_hash = models.CharField(null=True, max_length=66)
@@ -47,7 +47,7 @@ class Block(models.Model):
     objects = BlockManager()
 
     def __str__(self):
-        return "Blk N° : {number}".format(number=str(self.number), dt=datetime.fromtimestamp(self.timestamp))
+        return "Blk N° : {number}".format(number=str(self.number))
 
     class Meta:
         db_table = 'blocks'
@@ -76,15 +76,15 @@ class Transaction(models.Model):
 
 
 class TransactionRelationship(models.Model):
-    from_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='from_account', null=True)
-    to_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='to_account', null=True)
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
+    from_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sent_transactions', null=True)
+    to_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='received_transactions', null=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True, related_name='transactions')
     block = models.ForeignKey(Block, on_delete=models.CASCADE, null=True)
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return 'Tx : {tx}; from : {from_account}; to : {to_account};{block};' \
-            .format(tx=self.transaction, from_account=self.from_account, to_account=self.to_account, block=self.block)
+        tx = self.transaction
+        return "Tx : ${tx}".format(tx=tx)
 
     class Meta:
         db_table = 'transaction_relationships'
@@ -152,14 +152,3 @@ class SmartContract(Account):
         db_table = 'smart_contracts'
         verbose_name = 'Smart Contract'
         verbose_name_plural = 'Smart Contracts'
-
-
-class Log(models.Model):
-    tx_rel = models.ForeignKey(TransactionRelationship, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    smart_contract = models.ForeignKey(SmartContract, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    content = models.TextField(null=True)
-
-    class Meta:
-        db_table = 'event_logs'
-        verbose_name_plural = 'Logs'
-        verbose_name = 'Log'

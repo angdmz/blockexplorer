@@ -16,16 +16,35 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import routers, permissions
 
-from restapi.views import AccountViewSet, BlockViewSet
+from restapi.views import AccountViewSet, BlockViewSet, TransactionViewSet, SmartContractViewSet
 
 routerv1 = routers.DefaultRouter()
 routerv1.register(r'accounts', AccountViewSet)
 routerv1.register(r'blocks', BlockViewSet)
+routerv1.register(r'smartcontracts', SmartContractViewSet)
+routerv1.register(r'transactions', TransactionViewSet)
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Block explorer API",
+      default_version='v1',
+      description="RESTful API for ethereum blockchain",
+      contact=openapi.Contact(email="agustindorda@gmail.com"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
+    url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
     url(r'^api/v1/', include(routerv1.urls)),
-    url(r'^api-docs/', include('rest_framework.urls'))
+    url(r'^api-docs/', include('rest_framework.urls')),
 ]

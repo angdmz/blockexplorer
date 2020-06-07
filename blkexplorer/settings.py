@@ -16,19 +16,22 @@ import os
 import sys
 
 from blkexplorer.utils import LazyDict, constance_setting
+import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '51f@ztn_*u8#_k_d6pdbq2j)m)hk-fw2&*-=y_1(ufiknkj+d$'
+SECRET_KEY = os.getenv('SECRET_KEY', 'secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = int(os.getenv('DEBUG', 0)) == 1
 
 ALLOWED_HOSTS = ['*']
+
+FIXTURE_DIRS = ['blkexplorer/fixtures/']
 
 # Application definition
 
@@ -40,11 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg',
     'django_json_widget',
     'gateway',
     'ethereum',
-    'constance',
-    'constance.backends.database',
     'restapi',
     'synchro',
 ]
@@ -81,21 +83,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blkexplorer.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'somedb',
-        'USER': 'someuser',
-        'PASSWORD': 'somepassword',
-        'HOST': 'somehost',
-        'PORT': '1234',
+        'NAME': os.getenv('DB_NAME', 'blkexplorer'),
+        'USER': os.getenv('DB_USER', 'admin'),
+        'PASSWORD': os.getenv('DB_PASS', 'admin'),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -115,7 +115,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -129,41 +128,17 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
 
-CONSTANCE_CONFIG = {
-    'NODE_URL': ('http://172.17.0.1:8545', 'Node URL ', str),
-    'IS_POA': (False, 'Is Proof of Authority', bool)
-}
-
-
-DAPP_SETTINGS = LazyDict({
-    'NODE_URL': (constance_setting, 'NODE_URL'),
-    'IS_POA': (constance_setting, 'IS_POA'),
-})
-
-LOGGING = {}
-
-CONSTANCE_CONFIG_FIELDSETS = {
-    'Node info': ('NODE_URL', 'IS_POA', ),
-}
-
-LOG_ROOT = BASE_DIR + '/logs/'
-
+LOG_ROOT = os.getenv("LOG_ROOT", BASE_DIR + '/logs/')
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
 }
-
-try:
-    from blkexplorer.local_settings import *
-except:
-    pass
 
 LOGGING = {
     'version': 1,
@@ -214,3 +189,8 @@ LOGGING = {
         }
     },
 }
+
+try:
+    from blkexplorer.local_settings import *
+except:
+    pass
