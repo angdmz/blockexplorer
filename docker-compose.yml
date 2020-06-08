@@ -12,12 +12,6 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: blkexplorer
       POSTGRES_USER: admin
-  blockchain:
-    image: trufflesuite/ganache-cli:latest
-    ports:
-      - ${RPC_PORT:-8545}:8545
-    command: '-b 1'
-    container_name: blkexplorer-ganache
   blkexplorer:
     build:
       context: .
