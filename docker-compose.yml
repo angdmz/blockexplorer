@@ -1,63 +1,80 @@
-version: '3.1'
+version: '3.7'
 services:
   db:
-    image: postgres
     restart: always
     container_name: blkexplorer-postgres
     expose:
       - 5432
-    ports:
-      - ${DB_PORT:-5432}:5432
-    environment:
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: blkexplorer
-      POSTGRES_USER: admin
+    env_file:
+      - .env.prod
+    image: postgres:12.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
   blkexplorer:
     build:
       context: .
       dockerfile: Dockerfile
-    image: blkexplorer:dev
+    command: gunicorn blkexplorer.wsgi:application --bind 0.0.0.0:8000
     container_name: blkexplorer-app
-    volumes:
-    - .:/opt/project
-    ports:
-    - ${API_PORT:-8000}:8000
-    command: python manage.py runserver 0.0.0.0:8000
-    environment:
-      DEBUG: ${DEBUG:-1}
-  makemigrations:
-    build:
-      dockerfile: Dockerfile
-      context: .
+    image: blkexplorer:prod
+    expose:
+      - 8000
+    env_file:
+      - ./.env.prod
     depends_on:
-      - db
+      - migrations
     volumes:
-    - .:/opt/project
-    image: blkexplorer:dev
-    container_name: blkexplorer-makemigrations
-    command: python manage.py makemigrations --noinput
+      - static_volume:/home/api/api/staticfiles
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: blkexplorernginx
+    volumes:
+      - static_volume:/home/api/api/staticfiles
+    ports:
+      - 1337:80
+    depends_on:
+      - blkexplorer
+    container_name: blkexplorer-nginx
   migrations:
     build:
       dockerfile: Dockerfile
       context: .
     depends_on:
-      - makemigrations
-    image: blkexplorer:dev
-    container_name: blkexplorer-migrations
-    command: python manage.py migrate --noinput
-    volumes:
-    - .:/opt/project
+      - db
+    image: blkexplorer:prod
+    container_name: blkexplorer-makemigrations
+    command: python manage.py makemigrations --noinput && python manage.py migrate --noinput
+    entrypoint: ["sh", "/home/api/api/entrypoint.prod.sh"]
+    env_file:
+      - ./.env.prod
   superuser:
     depends_on:
       - migrations
-    image: blkexplorer:dev
+    image: blkexplorer:prod
     container_name: blkexplorer-superuser
     command: python manage.py loaddata superuser
+    env_file:
+      - ./.env.prod
+  collectstatics:
+    image: blkexplorer:prod
+    container_name: blkexplorer-collectstatics
+    command: python manage.py collectstatic --no-input --clear
+    env_file:
+      - ./.env.prod
     volumes:
-    - .:/opt/project
+      - static_volume:/home/api/api/staticfiles
   update_from_last_block:
-    image: blkexplorer:dev
+    depends_on:
+      - migrations
+    image: blkexplorer:prod
     container_name: blkexplorer-update_from_last_block
     command: python manage.py update_from_last_block
-    volumes:
-      - .:/opt/project
+    env_file:
+      - ./.env.prod
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

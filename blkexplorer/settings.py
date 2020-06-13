@@ -15,9 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import sys
 
-from blkexplorer.utils import LazyDict, constance_setting
-import os
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
@@ -29,7 +26,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.getenv('DEBUG', 0)) == 1
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(" ")
+USE_X_FORWARDED_HOST=True
 
 FIXTURE_DIRS = ['blkexplorer/fixtures/']
 
@@ -50,8 +48,6 @@ INSTALLED_APPS = [
     'restapi',
     'synchro',
 ]
-
-CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -131,14 +127,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/staticfiles/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-LOG_ROOT = os.getenv("LOG_ROOT", BASE_DIR + '/logs/')
-
+# DRF settings
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100,
+    'PAGE_SIZE': os.getenv("REST_PAGE_SIZE", 100),
 }
+
+# Logging settings
+LOG_ROOT = os.getenv("LOG_ROOT", BASE_DIR + '/logs/')
 
 LOGGING = {
     'version': 1,
@@ -189,6 +188,12 @@ LOGGING = {
         }
     },
 }
+
+
+# Ethereum node data
+
+NODE_URL = os.getenv("NODE_URL")
+IS_POA = os.getenv("IS_POA")
 
 try:
     from blkexplorer.local_settings import *
