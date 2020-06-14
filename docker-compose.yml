@@ -44,8 +44,8 @@ services:
     depends_on:
       - db
     image: blkexplorer:prod
-    container_name: blkexplorer-makemigrations
-    command: python manage.py makemigrations --noinput && python manage.py migrate --noinput
+    container_name: blkexplorer-migrations
+    command: python manage.py migrate --noinput
     entrypoint: ["sh", "/home/api/api/entrypoint.prod.sh"]
     env_file:
       - ./.env.prod
